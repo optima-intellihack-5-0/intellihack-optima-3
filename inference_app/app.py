@@ -7,8 +7,6 @@ from datetime import datetime
 
 
 def query_local_llm(prompt, history=None):
-    url = "http://localhost:8000/v1/chat/completions"
-    
     messages = []
     if history:
         for human, ai in history:
@@ -17,17 +15,26 @@ def query_local_llm(prompt, history=None):
     
     messages.append({"role": "user", "content": prompt})
     
-    payload = {
-        "model": "local-model",
-        "messages": messages,
-        "temperature": 0.3,
-        "max_tokens": 1000
-    }
-    
     try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        from llama_cpp import Llama
+        
+        llm = Llama.from_pretrained(
+            repo_id="Lakshith-403/optima_qwen-3b-instruct-ai-research-finetune",
+            filename="q4_model_final.gguf",
+        )
+        
+        formatted_prompt = ""
+        for msg in messages:
+            role_prefix = "User: " if msg["role"] == "user" else "Assistant: "
+            formatted_prompt += role_prefix + msg["content"] + "\n"
+        
+        response = llm(
+            formatted_prompt,
+            max_tokens=1000,
+            temperature=0.3,
+        )
+        
+        return response["choices"][0]["text"]
     except Exception as e:
         return f"Error querying LLM: {str(e)}"
 
@@ -57,7 +64,7 @@ def initialize_app():
             
             with gr.Column(scale=1):
                 gr.Markdown("### Model Settings")
-                temperature = gr.Slider(minimum=0.1, maximum=1.0, value=0.7, step=0.1, label="Temperature")
+                temperature = gr.Slider(minimum=0.1, maximum=1.0, value=0.3, step=0.1, label="Temperature")
         
         with gr.Row():
             with gr.Column(scale=4):
