@@ -1,5 +1,7 @@
 # AI Research Assistant
 
+https://huggingface.co/Lakshith-403/optima_qwen-3b-instruct-ai-research-finetune/blob/main/q4_model_final.gguf
+
 ## Inference app UI
 
 ```bash
